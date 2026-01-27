@@ -9,7 +9,7 @@ STIM_DURATION = 1
 ITI_DURATION = 0.5
 TARGET_PROPORTION = 0.3
 BACKGROUND_COLOR = 'white'
-DATA_FILE = './_data/nback.csv'
+DATA_FILE = './nback_data.csv'
 # Stimuli
 letters = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K']
 # ======================
@@ -46,22 +46,6 @@ win.flip()
 event.waitKeys(keyList=['space'])
 
 
-
-# Generate sequence with target proportion
-sequence_of_letters = []
-for i in range(N_TRIALS):
-    # randomly assign to trials to be repetitions or not
-    if i >= n and random.random() < TARGET_PROPORTION:
-        # Target trial - repeat letter from n positions back
-        letter = sequence_of_letters[i - n]
-    else:
-        # Non-target - pick different letter
-        if i >= n:
-            letter = random.choice([l for l in letters if l != sequence[i - n]])
-        else:
-            letter = random.choice(letters)
-    sequence_of_letters.append(letter)
-
 # Run trials
 results = [] # we will store the data in this list as we go
 sequence_of_letters = [] # keep track of which letters we're showing
@@ -84,11 +68,12 @@ for trial in range(N_TRIALS):
     else:
         is_target = False
         # show a different letter -- don't worry 
-        if i >= n:
-            letter = random.choice([l for l in letters if l != sequence[i - n]])
+        if trial >= n:
+            current_letter = random.choice([l for l in letters if l != sequence_of_letters[trial - n]])
         else:
-            letter = random.choice(letters)
-        
+            current_letter = random.choice(letters)
+    sequence_of_letters.append(current_letter)
+    
     # Display the fixation cross at the start of the trial
     fixation.draw()
     win.flip()
@@ -119,9 +104,8 @@ for trial in range(N_TRIALS):
         'subject_id': subject_id,
         'n': n,
         'trial': trial,
-        'stimulus': sequence[trial],
+        'stimulus': sequence_of_letters[trial],
         'is_target': int(is_target),
-        'response': int(response),
         'correct': int(correct),
         'rt': rt
     })
@@ -132,7 +116,7 @@ for trial in range(N_TRIALS):
 # Save the data
 file_exists = os.path.isfile(DATA_FILE)
 with open(DATA_FILE, 'a', newline='') as f:
-    fieldnames = ['subject_id', 'n', 'trial', 'stimulus', 'is_target', 'response', 'correct', 'rt']
+    fieldnames = ['subject_id', 'n', 'trial', 'stimulus', 'is_target', 'correct', 'rt']
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     if not file_exists:
         writer.writeheader()
