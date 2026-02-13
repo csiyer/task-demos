@@ -53,7 +53,7 @@ for trial in range(N_TRIALS):
     # this will "loop" over the 30 trials. This measn the code inside this loop will run 30 times.
     # On each time through the loop, the variable "trial" will be set to the number of the loop.
     # It'll start at 1 and end at 30.
-    # So on the first loop, "trial" will be equal to 1, on the second to 2, on the third to 2, and so on.
+    # So on the first loop, "trial" will be equal to 1, on the second to 2, on the third to 3, and so on.
     # On each loop, we will determine what stimulus to show, and then display the trial. 
     # Then, we will measure the response, save the data, and move on to the next trial. 
     
