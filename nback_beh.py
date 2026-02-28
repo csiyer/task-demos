@@ -3,7 +3,7 @@ from psychopy.hardware import keyboard
 import random, csv, os
 
 # ===== PARAMETERS =====
-# Total duration: 6 blocks * ~50 sec = ~5 min
+# Total duration: 6 blocks * 1 min = 6 min
 # 1-back letters, 2-back letters, 1-back faces, 2-back faces, 1-back scenes, 2-back scenes
 
 N_BY_BLOCK = [1, 2, 1, 2, 1, 2]
