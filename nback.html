@@ -49,7 +49,7 @@
         });
 
         const subject_id = jsPsych.randomization.randomID(10);
-        const filename = `${subject_id}.csv`;
+        const filename = `nback_${subject_id}.csv`;
         jsPsych.data.addProperties({ subject_id: subject_id });
 
         const name_entry = {
@@ -80,6 +80,7 @@
             on_finish: function (data) {
                 n = parseInt(data.response.n_val);
                 jsPsych.data.addProperties({ n: n });
+                generateTrials(n);
             }
         };
 
@@ -105,28 +106,32 @@
             trial_duration: 500,
         };
 
-        // Sequence generation (approx 30 trials)
-        let sequence = [];
-        for (let i = 0; i < 30; i++) {
-            if (i >= n && Math.random() < 0.3) {
-                sequence.push(sequence[i - n]);
-            } else {
-                let available = letters.filter(l => i < n || l !== sequence[i - n]);
-                sequence.push(jsPsych.randomization.sampleWithReplacement(available, 1)[0]);
-            }
-        }
+        // Sequence generation (30 trials). The trials array is filled in place once N is
+        // chosen in setup, since the timeline captures this array before setup runs.
+        const n_trials = 30;
+        const trials = Array.from({ length: n_trials }, () => ({}));
 
-        const trials = sequence.map((letter, index) => {
-            return {
-                stimulus: `<div class="nback-stim">${letter}</div>`,
-                data: {
+        function generateTrials(n) {
+            let sequence = [];
+            for (let i = 0; i < n_trials; i++) {
+                if (i >= n && Math.random() < 0.3) {
+                    sequence.push(sequence[i - n]);
+                } else {
+                    let available = letters.filter(l => i < n || l !== sequence[i - n]);
+                    sequence.push(jsPsych.randomization.sampleWithReplacement(available, 1)[0]);
+                }
+            }
+            sequence.forEach((letter, index) => {
+                trials[index].stimulus = `<div class="nback-stim">${letter}</div>`;
+                trials[index].data = {
                     task: 'nback',
                     letter: letter,
                     trial_index: index,
                     is_target: index >= n && letter === sequence[index - n]
-                }
-            };
-        });
+                };
+            });
+        }
+        generateTrials(n);
 
         const test = {
             type: jsPsychHtmlKeyboardResponse,
@@ -151,7 +156,7 @@
         const save_data = {
             type: jsPsychPipe,
             action: "save",
-            experiment_id: "Vsevdw4ov0ct",
+            experiment_id: "pBNXrMsbp1xO",
             filename: filename,
             data_string: () => jsPsych.data.get().csv()
         };

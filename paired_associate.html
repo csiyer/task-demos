@@ -58,7 +58,7 @@
         });
 
         const subject_id = jsPsych.randomization.randomID(10);
-        const filename = `${subject_id}.csv`;
+        const filename = `paired_associate_${subject_id}.csv`;
         jsPsych.data.addProperties({ subject_id: subject_id });
 
         const name_entry = {
@@ -180,7 +180,7 @@
             const save_data = {
                 type: jsPsychPipe,
                 action: "save",
-                experiment_id: "Vsevdw4ov0ct",
+                experiment_id: "pBNXrMsbp1xO",
                 filename: filename,
                 data_string: () => jsPsych.data.get().csv()
             };
