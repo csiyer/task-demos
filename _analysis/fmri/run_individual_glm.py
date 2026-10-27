@@ -18,7 +18,7 @@ def run_hcp_glm(subject_id, out_name, contrasts_to_run):
     mask_img = os.path.join(base_path, "brainmask_fs.2.nii.gz")
     ev_dir = os.path.join(base_path, "EVs")
     confounds_file = os.path.join(base_path, "Movement_Regressors.txt")
-    output_dir = "/Users/chrisiyer/_Current/classes/task-demos/_analysis-fmri/images"
+    output_dir = "/Users/chrisiyer/_Current/classes/task-demos/_analysis/fmri/images"
     os.makedirs(output_dir, exist_ok=True)
 
     # 1. Load Timing (EVs)

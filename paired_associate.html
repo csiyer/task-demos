@@ -76,13 +76,13 @@
 
         async function initTask() {
             // Load and parse all words from the stimuli file
-            const response = await fetch('stimuli/words.txt');
+            const response = await fetch('_stimuli/words.txt');
             const wordText = await response.text();
             const all_words = wordText.split('\n')
                 .map(w => w.trim())
                 .filter(w => w.length > 0);
 
-            const all_images = Array.from({ length: 60 }, (_, i) => `stimuli/objects/${i}.jpg`);
+            const all_images = Array.from({ length: 60 }, (_, i) => `_stimuli/objects/${i}.jpg`);
 
             const selected_images = jsPsych.randomization.sampleWithoutReplacement(all_images, n_pairs);
             const selected_words = jsPsych.randomization.sampleWithoutReplacement(all_words, n_pairs);
