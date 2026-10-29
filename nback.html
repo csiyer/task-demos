@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
     <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
     <style>
@@ -20,6 +21,12 @@
         .nback-stim {
             font-size: 80px;
             font-weight: bold;
+        }
+
+        .nback-img {
+            width: 300px;
+            height: 300px;
+            object-fit: contain;
         }
 
         .btn-download {
@@ -61,7 +68,11 @@
         };
 
         let n = 1;
+        let stim_type = 'letters';
         const letters = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K'];
+        const n_images = 61; // _stimuli/faces and _stimuli/scenes contain 0.jpg ... 60.jpg
+        const pool_size = letters.length; // number of distinct items used per run
+        let stim_pool = letters;
 
         const setup = {
             type: jsPsychSurveyHtmlForm,
@@ -74,14 +85,32 @@
                     <label><input type="radio" name="n_val" value="2"> 2-back</label><br>
                     <label><input type="radio" name="n_val" value="3"> 3-back</label>
                 </div>
+                <p>Select the stimulus type:</p>
+                <div style="margin: 20px 0;">
+                    <label><input type="radio" name="stim_type" value="letters" checked> Letters</label><br>
+                    <label><input type="radio" name="stim_type" value="faces"> Faces</label><br>
+                    <label><input type="radio" name="stim_type" value="scenes"> Scenes</label>
+                </div>
                 </div>
             `,
             button_label: 'Continue',
             on_finish: function (data) {
                 n = parseInt(data.response.n_val);
-                jsPsych.data.addProperties({ n: n });
+                stim_type = data.response.stim_type;
+                if (stim_type === 'letters') {
+                    stim_pool = letters;
+                } else {
+                    const all_images = Array.from({ length: n_images }, (_, i) => `_stimuli/${stim_type}/${i}.jpg`);
+                    stim_pool = jsPsych.randomization.sampleWithoutReplacement(all_images, pool_size);
+                }
+                jsPsych.data.addProperties({ n: n, stimulus_type: stim_type });
                 generateTrials(n);
             }
+        };
+
+        const preload = {
+            type: jsPsychPreload,
+            images: () => stim_type === 'letters' ? [] : stim_pool
         };
 
         const instructions = {
@@ -90,8 +119,8 @@
                 return `
                     <div style="text-align:left;">
                     <h1>Instructions (${n}-back)</h1>
-                    <p>You will see a series of letters.</p>
-                    <p>Press <strong>SPACE</strong> whenever the current letter matches the one shown <strong>${n}</strong> position(s) ago.</p>
+                    <p>You will see a series of ${stim_type}.</p>
+                    <p>Press <strong>SPACE</strong> whenever the current ${stim_type.slice(0, -1)} matches the one shown <strong>${n}</strong> position(s) ago.</p>
                     <p>Otherwise, press nothing.</p>
                     <p>Press any key to start.</p>
                     </div>
@@ -106,28 +135,34 @@
             trial_duration: 500,
         };
 
-        // Sequence generation (30 trials). The trials array is filled in place once N is
-        // chosen in setup, since the timeline captures this array before setup runs.
-        const n_trials = 30;
+        // Sequence generation (40 trials, exactly 20 targets). The trials array is filled in place once N and the
+        // stimulus type are chosen in setup, since the timeline captures this array before setup runs.
+        const n_trials = 40;
+        const n_targets = 20;
         const trials = Array.from({ length: n_trials }, () => ({}));
 
         function generateTrials(n) {
+            // Choose exactly n_targets positions from those that can be targets (index >= n)
+            const eligible = Array.from({ length: n_trials - n }, (_, i) => i + n);
+            const target_positions = new Set(jsPsych.randomization.sampleWithoutReplacement(eligible, n_targets));
             let sequence = [];
             for (let i = 0; i < n_trials; i++) {
-                if (i >= n && Math.random() < 0.3) {
+                if (target_positions.has(i)) {
                     sequence.push(sequence[i - n]);
                 } else {
-                    let available = letters.filter(l => i < n || l !== sequence[i - n]);
+                    let available = stim_pool.filter(s => i < n || s !== sequence[i - n]);
                     sequence.push(jsPsych.randomization.sampleWithReplacement(available, 1)[0]);
                 }
             }
-            sequence.forEach((letter, index) => {
-                trials[index].stimulus = `<div class="nback-stim">${letter}</div>`;
+            sequence.forEach((item, index) => {
+                trials[index].stimulus = stim_type === 'letters'
+                    ? `<div class="nback-stim">${item}</div>`
+                    : `<img src="${item}" class="nback-img">`;
                 trials[index].data = {
                     task: 'nback',
-                    letter: letter,
+                    item: item,
                     trial_index: index,
-                    is_target: index >= n && letter === sequence[index - n]
+                    is_target: index >= n && item === sequence[index - n]
                 };
             });
         }
@@ -182,7 +217,7 @@
             choices: [' ']
         };
 
-        jsPsych.run([name_entry, setup, instructions, test_procedure, save_data, summary_screen]);
+        jsPsych.run([name_entry, setup, preload, instructions, test_procedure, save_data, summary_screen]);
     </script>
 </body>
 
